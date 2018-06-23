@@ -1,22 +1,72 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="源文件">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
-    <Filter Include="头文件">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
-    </Filter>
     <Filter Include="资源文件">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="GLAD">
+      <UniqueIdentifier>{b349ddf7-6b13-4dd2-ac19-6223ef6cba1b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="inc">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="inc\context">
+      <UniqueIdentifier>{b2565c05-3ea1-4a39-8266-d2397323e96f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\context">
+      <UniqueIdentifier>{44ae6ce0-0718-4e18-b853-26507e68f83f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="inc\shape">
+      <UniqueIdentifier>{6e90ad57-c1ba-46b3-be62-55eacaa79506}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\shape">
+      <UniqueIdentifier>{e605cc74-4bfb-4b7e-bd5a-bcadc4572afd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="inc\base">
+      <UniqueIdentifier>{a684553d-d457-4ba2-bc54-d10c57e18de9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\base">
+      <UniqueIdentifier>{a5d562bc-c412-4196-b36c-77e3ffd9a9c7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
-      <Filter>源文件</Filter>
+      <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="glad.c">
+      <Filter>GLAD</Filter>
+    </ClCompile>
+    <ClCompile Include="src\context.cpp">
+      <Filter>src\context</Filter>
+    </ClCompile>
+    <ClCompile Include="src\shape.cpp">
+      <Filter>src\shape</Filter>
+    </ClCompile>
+    <ClCompile Include="src\color.cpp">
+      <Filter>src\context</Filter>
+    </ClCompile>
+    <ClCompile Include="src\vec3d.cpp">
+      <Filter>src\base</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="inc\context.h">
+      <Filter>inc\context</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\shape.h">
+      <Filter>inc\shape</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\color.h">
+      <Filter>inc\context</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\vec3d.h">
+      <Filter>inc\base</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
