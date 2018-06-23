@@ -39,12 +39,17 @@ public:
 	void Release();
 
 	void SetBackGroundColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+	void SetBackGroundColor(const Color& c);
+
+	void SetShapeColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+	void SetShapeColor(const Color& c);
 
 	void Begin();
 	void End();
 	void Commit();
 
 	void Vertexs(const vec3d& v);
+	void VertexColors(const Color& c);
 	void Indexs(unsigned int n);
 
 	void VertexShaderSource(const std::string& s);
@@ -52,7 +57,8 @@ public:
 
 private:
 	GLFWwindow* pwindow;
-	Color color;
+	Color bgcolor;
+	Color shpcolor;
 
 	std::vector<vec3f> vertexs;
 	std::vector<unsigned int> indexs;
@@ -61,6 +67,7 @@ private:
 	std::string fragment_shader_source;
 
 	bool bRedraw;
+	bool bVexColor;
 };
 
 

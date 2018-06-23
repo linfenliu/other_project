@@ -54,6 +54,9 @@
     <ClCompile Include="src\vec3d.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
+    <ClCompile Include="src\shader.cpp">
+      <Filter>src\context</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="inc\context.h">
@@ -67,6 +70,9 @@
     </ClInclude>
     <ClInclude Include="inc\vec3d.h">
       <Filter>inc\base</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\shader.h">
+      <Filter>inc\context</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

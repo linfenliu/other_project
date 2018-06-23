@@ -26,6 +26,7 @@ int main(size_t argc, char* argv[])
 
 	InitOpenGl(ctx);
 
+
 	ctx.RenderLoop(triangle);
 
 	ctx.Release();

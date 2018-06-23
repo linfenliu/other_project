@@ -6,14 +6,14 @@
 
 #include "shape.h"
 
-Context::Context() :bRedraw(true)
+Context::Context() :bRedraw(true), bVexColor(false)
 {
 	vertex_shader_source =  "\
 					#version 330 core\n	\
 					layout(location = 0) in vec3 aPos;\n	\
 					void main()\n	\
 					{\n	\
-						gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n	\
+						gl_Position = vec4(aPos, 1.0);\n	\
 					}";
 
 
@@ -22,7 +22,7 @@ Context::Context() :bRedraw(true)
 					  out vec4 FragColor; \n	\
 					  void main()\n	\
 					  {\n	\
-						FragColor = vec4(1.0f, 0.0f, 0.0f, 1.0f); \n	\
+						FragColor = vec4(0.7f,0.7f,0.7f,0.7f); \n	\
 					  }";
 }
 
@@ -103,7 +103,22 @@ static void processInput(GLFWwindow *window)
 
 void Context::SetBackGroundColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
 {
-	color.SetColor(r, g, b, a);
+	bgcolor.SetColor(r, g, b, a);
+}
+
+void Context::SetBackGroundColor(const Color& c)
+{
+	bgcolor = c;
+}
+
+void Context::SetShapeColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
+{
+	shpcolor.SetColor(r, g, b, a);
+}
+
+void Context::SetShapeColor(const Color& c)
+{
+	shpcolor = c;
 }
 
 void Context::RenderLoop(Shape& shp)
@@ -114,7 +129,7 @@ void Context::RenderLoop(Shape& shp)
 
 		if (bRedraw)
 		{
-			::glClearColor(color[0] / 255.0f, color[0] / 255.0f, color[0] / 255.0f, 1.0f);
+			::glClearColor(bgcolor[0] / 255.0f, bgcolor[1] / 255.0f, bgcolor[2] / 255.0f, bgcolor[3] / 255.0f);
 			::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 			shp.DoRender(*this);
@@ -136,11 +151,18 @@ void Context::Begin()
 {
 	vertexs.clear();
 	indexs.clear();
+	
 }
 
 void Context::Vertexs(const vec3d& v)
 {
 	vertexs.push_back(v);
+}
+
+void Context::VertexColors(const Color& c)
+{
+	vertexs.push_back(vec3f(c[0] / 255.0f, c[1] / 255.0f, c[2] / 255.0f, c[3] / 255.0f));
+	bVexColor = true;
 }
 
 void Context::Indexs(unsigned int n)
@@ -158,7 +180,7 @@ void Context::FragmentShaderSource(const std::string& s)
 	fragment_shader_source = s;
 }
 
-static int SendVAO2GPU(const std::vector<vec3f>& d, const std::vector<unsigned int>& idx)
+static int SendVAO2GPU(const std::vector<vec3f>& d, const std::vector<unsigned int>& idx, bool bVexColor)
 {
 	unsigned int VAO;
 	::glGenVertexArrays(1, &VAO);
@@ -177,9 +199,20 @@ static int SendVAO2GPU(const std::vector<vec3f>& d, const std::vector<unsigned i
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned) * idx.size(), idx.data(), GL_STATIC_DRAW);
 	}
 
-	::glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-	::glEnableVertexAttribArray(0);
+	if (!bVexColor)
+	{
+		::glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+		::glEnableVertexAttribArray(0);
+	}
+	else
+	{
+		::glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+		::glEnableVertexAttribArray(0);
 
+		::glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+		::glEnableVertexAttribArray(1);
+	}
+	
 	return VAO;
 }
 
@@ -223,14 +256,23 @@ static int CreateProgram(int vs, int fs)
 	return shader_program;
 }
 
+static void SetUniformShpColor(const Color& c ,int32_t prog)
+{
+	int vertex_color_location = ::glGetUniformLocation(prog, "our_color");
+	::glUniform4f(vertex_color_location, c[0] / 255.0f, c[1] / 255.0f, c[2] / 255.0f, c[3] / 255.0f);
+	
+}
+
 void Context::End()
 {
 	int vs = CreateSharder(vertex_shader_source.c_str(), GL_VERTEX_SHADER);
 	int fs = CreateSharder(fragment_shader_source.c_str(), GL_FRAGMENT_SHADER);
 	int prog = CreateProgram(vs, fs);
 	::glUseProgram(prog);
+	SetUniformShpColor(shpcolor, prog);
 
-	int vao = SendVAO2GPU(vertexs, indexs);
+
+	int vao = SendVAO2GPU(vertexs, indexs, bVexColor);
 	::glBindVertexArray(vao);
 
 	if (indexs.empty())
@@ -242,9 +284,9 @@ void Context::End()
 		::glDrawElements(GL_TRIANGLES, indexs.size(), GL_UNSIGNED_INT, 0);
 	}
 	
-
 	vertexs.clear();
 	indexs.clear();
+	
 }
 
 void Context::Commit()

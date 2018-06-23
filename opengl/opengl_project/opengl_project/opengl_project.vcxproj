@@ -88,12 +88,14 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="src\color.cpp" />
     <ClCompile Include="src\context.cpp" />
+    <ClCompile Include="src\shader.cpp" />
     <ClCompile Include="src\shape.cpp" />
     <ClCompile Include="src\vec3d.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="inc\color.h" />
     <ClInclude Include="inc\context.h" />
+    <ClInclude Include="inc\shader.h" />
     <ClInclude Include="inc\shape.h" />
     <ClInclude Include="inc\vec3d.h" />
   </ItemGroup>
