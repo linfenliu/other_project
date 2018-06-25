@@ -75,6 +75,11 @@ public:
 		return data[n];
 	}
 
+	const Type& operator[](size_t n) const
+	{
+		return data[n];
+	}
+
 	Type data[N];
 };
 

@@ -50,15 +50,20 @@ public:
 
 	void Vertexs(const vec3d& v);
 	void VertexColors(const Color& c);
+	void VertexTexture(const vec2d& v);
 	void Indexs(unsigned int n);
 
 	void VertexShaderSource(const std::string& s);
 	void FragmentShaderSource(const std::string& s);
 
+	void SetTexture(const std::string& path);
+
 private:
 	GLFWwindow* pwindow;
 	Color bgcolor;
 	Color shpcolor;
+
+	std::string texture_path;
 
 	std::vector<vec3f> vertexs;
 	std::vector<unsigned int> indexs;
@@ -68,6 +73,11 @@ private:
 
 	bool bRedraw;
 	bool bVexColor;
+	bool bTexture;
+
+	float alpha;
+
+
 };
 
 

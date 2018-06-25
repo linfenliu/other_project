@@ -8,10 +8,10 @@ static void InitOpenGl(Context& ctx)
 	ctx.InitGlfw();
 	ctx.InitGlfwVersion(3, 3, 1);
 
-	ctx.CreateBindWindow(1024, 860, "OpenGL");
+	ctx.CreateBindWindow(2000, 1200, "OpenGL");
 
 	ctx.InitGlad();
-	ctx.SetViewPort(0, 0, 1024, 860);
+	ctx.SetViewPort(0, 0, 2000, 1200);
 
 	ctx.FixWindow();
 
@@ -22,12 +22,12 @@ int main(size_t argc, char* argv[])
 {
 	Context ctx;
 
-	ShapeTriangle triangle;
+	ShapeRectangle shp;
 
 	InitOpenGl(ctx);
 
 
-	ctx.RenderLoop(triangle);
+	ctx.RenderLoop(shp);
 
 	ctx.Release();
 

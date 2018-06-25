@@ -4,7 +4,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
-
+ 
 static std::string LoadFile(const std::string& path)
 {
 	std::ifstream ifs(path);

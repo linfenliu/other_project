@@ -3,10 +3,18 @@
 #include <glad\glad.h>
 #include <GLFW\glfw3.h>
 #include <iostream>
+#include <stb_image.h>
 
 #include "shape.h"
 
-Context::Context() :bRedraw(true), bVexColor(false)
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+glm::mat4 project_matrix;
+float i = 0.0f;
+
+Context::Context() :bRedraw(true), bVexColor(false), bTexture(false), alpha(0.0f)
 {
 	vertex_shader_source =  "\
 					#version 330 core\n	\
@@ -90,11 +98,21 @@ void Context::FixWindow()
 	::glfwSetFramebufferSizeCallback(pwindow, framebuffer_size_callback);
 }
 
-static void processInput(GLFWwindow *window)
+static void processInput(GLFWwindow *window, float& alpha)
 {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 	{
 		glfwSetWindowShouldClose(window, true);
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+	{
+		--i;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+	{
+		++i;
 	}
 	
 	//if any key or mouse or window event happen, set bRedraw flag to true...
@@ -125,8 +143,8 @@ void Context::RenderLoop(Shape& shp)
 {
 	do 
 	{
-		processInput(pwindow);
-
+		processInput(pwindow, alpha);
+		
 		if (bRedraw)
 		{
 			::glClearColor(bgcolor[0] / 255.0f, bgcolor[1] / 255.0f, bgcolor[2] / 255.0f, bgcolor[3] / 255.0f);
@@ -165,6 +183,12 @@ void Context::VertexColors(const Color& c)
 	bVexColor = true;
 }
 
+void Context::VertexTexture(const vec2d& v)
+{
+	vertexs.push_back(vec3f((float)v[0], (float)v[1], (float)0.0));
+	bTexture = true;
+}
+
 void Context::Indexs(unsigned int n)
 {
 	indexs.push_back(n);
@@ -180,7 +204,7 @@ void Context::FragmentShaderSource(const std::string& s)
 	fragment_shader_source = s;
 }
 
-static int SendVAO2GPU(const std::vector<vec3f>& d, const std::vector<unsigned int>& idx, bool bVexColor)
+static int SendVAO2GPU(const std::vector<vec3f>& d, const std::vector<unsigned int>& idx, bool bVexColor, bool bTexture)
 {
 	unsigned int VAO;
 	::glGenVertexArrays(1, &VAO);
@@ -199,18 +223,29 @@ static int SendVAO2GPU(const std::vector<vec3f>& d, const std::vector<unsigned i
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned) * idx.size(), idx.data(), GL_STATIC_DRAW);
 	}
 
-	if (!bVexColor)
+	if (!bVexColor && !bTexture)
 	{
 		::glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 		::glEnableVertexAttribArray(0);
 	}
-	else
+	else if (bVexColor && !bTexture)
 	{
 		::glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
 		::glEnableVertexAttribArray(0);
 
 		::glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
 		::glEnableVertexAttribArray(1);
+	}
+	else if (bVexColor && bTexture)
+	{
+		::glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)0);
+		::glEnableVertexAttribArray(0);
+
+		::glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(3 * sizeof(float)));
+		::glEnableVertexAttribArray(1);
+
+		::glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(6 * sizeof(float)));
+		::glEnableVertexAttribArray(2);
 	}
 	
 	return VAO;
@@ -256,23 +291,100 @@ static int CreateProgram(int vs, int fs)
 	return shader_program;
 }
 
-static void SetUniformShpColor(const Color& c ,int32_t prog)
+static void SetUniformShpColor(const Color& c ,int32_t prog, float alpha)
 {
 	int vertex_color_location = ::glGetUniformLocation(prog, "our_color");
 	::glUniform4f(vertex_color_location, c[0] / 255.0f, c[1] / 255.0f, c[2] / 255.0f, c[3] / 255.0f);
-	
+
+	int alpha_prog = ::glGetUniformLocation(prog, "alpha");
+	::glUniform1f(alpha_prog, alpha);
+
+
+	glm::mat4 trsf = glm::scale(glm::mat4(), glm::vec3(0.5f, 0.5f, 0.5f));
+	trsf = glm::rotate(trsf, glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+	//trsf = glm::translate(trsf, glm::vec3(1.0f, 0.0f, 0.0f));
+	int matrix = ::glGetUniformLocation(prog, "matrix");
+	::glUniformMatrix4fv(matrix, 1, GL_FALSE, glm::value_ptr(trsf));
+}
+
+static unsigned int LoadTexture(const std::string& path)
+{
+	unsigned int texture0;
+	glGenTextures(1, &texture0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texture0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	int width, height, nrChannels;
+	stbi_set_flip_vertically_on_load(true);
+	unsigned char *data = stbi_load(path.c_str(), &width, &height, &nrChannels, 0);
+	if (data)
+	{
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else
+	{
+		std::cout << "Failed to load texture" << std::endl;
+	}
+	stbi_image_free(data);
+
+	{
+		unsigned int texture1;
+		glGenTextures(1, &texture1);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, texture1);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		data = stbi_load("4.png", &width, &height, &nrChannels, 0);
+		if (data)
+		{
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+			glGenerateMipmap(GL_TEXTURE_2D);
+		}
+		else
+		{
+			std::cout << "Failed to load texture" << std::endl;
+		}
+		stbi_image_free(data);
+	}
+
+
+	return texture0;
 }
 
 void Context::End()
 {
+	project_matrix = glm::scale(glm::mat4(), glm::vec3(1.0f / 2000.0f, 1.0f / 1200.0f, 1.0f / 3000.0f));
+	glm::mat4 view_matrix = glm::translate(glm::mat4(), glm::vec3(0.0f, (3000.0f / 100.0f) * i, 0.0f));
+	glm::mat4 model_matrix = glm::rotate(glm::mat4(), glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+
+
 	int vs = CreateSharder(vertex_shader_source.c_str(), GL_VERTEX_SHADER);
 	int fs = CreateSharder(fragment_shader_source.c_str(), GL_FRAGMENT_SHADER);
 	int prog = CreateProgram(vs, fs);
 	::glUseProgram(prog);
-	SetUniformShpColor(shpcolor, prog);
+
+	SetUniformShpColor(shpcolor, prog, alpha);
+	if (bTexture)
+	{
+		LoadTexture(texture_path);
+	}
+
+	glUniform1i(glGetUniformLocation(prog, "texture0"), 0);
+	glUniform1i(glGetUniformLocation(prog, "texture1"), 1);
+
+	glUniformMatrix4fv(glGetUniformLocation(prog, "project_martix"), 1, GL_FALSE, glm::value_ptr(project_matrix));
+	glUniformMatrix4fv(glGetUniformLocation(prog, "view_martix"), 1, GL_FALSE, glm::value_ptr(view_matrix));
+	glUniformMatrix4fv(glGetUniformLocation(prog, "model_martix"), 1,GL_FALSE , glm::value_ptr(model_matrix));
 
 
-	int vao = SendVAO2GPU(vertexs, indexs, bVexColor);
+	int vao = SendVAO2GPU(vertexs, indexs, bVexColor, bTexture);
 	::glBindVertexArray(vao);
 
 	if (indexs.empty())
@@ -283,13 +395,18 @@ void Context::End()
 	{
 		::glDrawElements(GL_TRIANGLES, indexs.size(), GL_UNSIGNED_INT, 0);
 	}
-	
+
 	vertexs.clear();
 	indexs.clear();
 	
 }
 
+
 void Context::Commit()
+{}
+
+
+void Context::SetTexture(const std::string& path)
 {
-	
+	texture_path = path;
 }
